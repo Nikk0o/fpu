@@ -31,7 +31,7 @@ module int_to_fp(
 
 	always @(posedge clk or negedge reset) 
 	begin
-		if (!reset && !clk) begin
+		if (!reset) begin
 			mantissa <= {mantissa_size{1'b0}};
 			exp <= {exponent_size{1'b0}};
 			sign <= 0;

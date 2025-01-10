@@ -41,7 +41,7 @@ module floating_point_to_int(
 	end
 
 	always @(posedge clk or negedge reset) begin: conversion_logic
-		if (!reset && !clk) begin
+		if (!reset) begin
 			r_int <= {int_size{1'b0}};
 			exp <= {exponent_size{1'b0}};
 			mantissa <= {mantissa_size + 1{1'b0}};
@@ -70,7 +70,9 @@ module floating_point_to_int(
 						// nan or infinity, or value is bigger than the max int
 							r_int <= {int_size{1'b1}};
 							state <= 2'b11;
-							r_invalid_flag <= 1;
+							if (float[precision - 2:precision - exponent_size - 1] == {exponent_size{1'b1}} && mantissa !=
+							    {mantissa_size{1'b1}} - {mantissa_size - 1{1'b1}} || exp >= int_size) 
+									r_invalid_flag <= 1;
 						end
 						else begin
 							state <= 2'b10;
