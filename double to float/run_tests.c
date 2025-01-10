@@ -74,6 +74,8 @@ module tb;\n \
     if (scanf(" %d", &op_max) < 1)
     {
         perror("Invalid input\n");
+        remove("tb.v");
+        fclose(*tb);
         return 2;
     }
     if (op_max <= 0)
@@ -150,8 +152,8 @@ module tb;\n \
 \
 endmodule\n", op_max);
 
-        fclose(*tb);
-        *tb = NULL;
+    fclose(*tb);
+    *tb = NULL;
     return 0;
 }
 
@@ -170,10 +172,15 @@ int main(void)
     if ((status = create_test_file(&tb)) != 0)
         return status;
 
-    // create this file
+    // create vvp file
     if ((status = system("iverilog -o a.vvp tb.v")) != 0)
     {
-        perror("Error generating a.vvp.\n");
+        perror("Error generating vvp file.\n");
+        return status;
+    }
+
+    if ((status = system("vvp a.vvp")) != 0)
+    {
         return status;
     }
 

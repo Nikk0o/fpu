@@ -200,7 +200,7 @@ module double_to_float(
                                 r_done <= 1;
                             end
                             2'b11: begin: round_to_closest
-                                if (sign)
+                                if (sign_32)
                                     // round to posinf or to 0
                                     if (frac[28] == 1'b1 && frac[27:0] != 28'b0) begin
                                         mantissa_32_ = mantissa_32 + 1'b1;
