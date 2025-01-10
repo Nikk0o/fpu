@@ -200,6 +200,58 @@ module double_to_float(
                                 r_done <= 1;
                             end
                             2'b11: begin: round_to_closest
+                                if (sign)
+                                    // round to posinf or to 0
+                                    if (frac[28] == 1'b1 && frac[27:0] != 28'b0) begin
+                                        mantissa_32_ = mantissa_32 + 1'b1;
+
+                                        if (mantissa_32_[23] == 1'b1) begin
+                                            exp_32_ = exp_64[7:0] + 1'b1;
+                                            if (exp_32_[11] == 1'b1) begin
+                                                sign_32 <= sign_64;
+                                                mantissa_32 <= 23'b0;
+                                                exp_32 <= 8'b11111111;
+
+                                                r_overflow_exception <= 1;
+                                            end
+                                            else begin
+                                                sign_32 <= sign_64;
+                                                exp_32 <= exp_32_[7:0] + (exp_64[10] == 1'b1) ? 8'b10000000 : 1'b0;
+                                                mantissa_32 <= mantissa_32_[23:1];
+                                            end
+                                        end
+                                        else begin
+                                            sign_32 <= sign_64;
+                                            exp_32 <= exp_64[7:0] + (exp_64[10] == 1'b1) ? 8'b10000000 : 1'b0;
+                                            mantissa_32 <= mantissa_32_[22:0];
+                                        end
+                                    end
+                                else
+                                    // round to neginf or to 0
+                                    if (frac[28] == 1'b1 && frac[27:0] != 28'b0) begin
+                                        mantissa_32_ = mantissa_32 + 1'b1;
+
+                                        if (mantissa_32_[23] == 1'b1) begin
+                                            exp_32_ = exp_64[7:0] + 1'b1;
+                                            if (exp_32_[11] == 1'b1) begin
+                                                sign_32 <= sign_64;
+                                                mantissa_32 <= 23'b0;
+                                                exp_32 <= 8'b11111111;
+
+                                                r_overflow_exception <= 1;
+                                            end
+                                            else begin
+                                                sign_32 <= sign_64;
+                                                exp_32 <= exp_32_[7:0] + (exp_64[10] == 1'b1) ? 8'b10000000 : 1'b0;
+                                                mantissa_32 <= mantissa_32_[23:1];
+                                            end
+                                        end
+                                        else begin
+                                            sign_32 <= sign_64;
+                                            exp_32 <= exp_64[7:0] + (exp_64[10] == 1'b1) ? 8'b10000000 : 1'b0;
+                                            mantissa_32 <= mantissa_32_[22:0];
+                                        end
+                                    end
                                 r_done <= 1;
                             end
                         endcase
