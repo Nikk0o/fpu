@@ -52,6 +52,7 @@ module float_to_double(
                         state <= 2'b11;
                     end
                     else if (exp_32 == 8'b11111111 && mantissa_32 == 23'b0) begin
+                    // inf
                         sign_64 <= sign_32;
                         exp_64 <= 11'b11111111111;
                         mantissa_64 <= 52'b0;
