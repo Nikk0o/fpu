@@ -19,7 +19,7 @@ floating_point_to_int uutb(
 					.int(int));
 
 initial begin
-	$dumpfile("porra.vcd");
+	$dumpfile("tb.vcd");
 	$dumpvars(0, t);
 	#10; clk = 1'b0;
 	#10; clk = 1'b1;

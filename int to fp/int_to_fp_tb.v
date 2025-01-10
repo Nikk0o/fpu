@@ -15,8 +15,8 @@ int_to_fp teste(
 				 .fp(fp));
 
 initial begin
-	$dumpfile("porra.vcd");
-	$dumpvars(0, tb);
+	$dumpfile("tb.vcd");
+	$dumpvars(0, t);
 	#10; clk = 1'b0;
 	#10; clk = 1'b1;
 	#10; clk = 1'b0;
