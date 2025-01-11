@@ -70,30 +70,38 @@ module double_to_float(
                         mantissa_32[20:0] <= mantissa_64[49:29];
 
                         r_nan_exception <= 1;
+                        r_overflow_exception <= 0;
+                        r_underflow_exception <= 0;
                         state <= 2'b11;
                         r_done <= 1;
                     end
-                    if (exp_64 == 11'b11111111111 && mantissa_64[51] == 2'b1) begin
+                    else if (exp_64 == 11'b11111111111 && mantissa_64[51] == 1'b1) begin
                     // qNaN
                         sign_32 <= sign_64;
                         exp_32 <= 8'b11111111;
-                        mantissa_32 <= mantissa_64[63:41];
+                        mantissa_32 <= mantissa_64[51:29];
 
                         r_nan_exception <= 0;
+                        r_overflow_exception <= 0;
+                        r_underflow_exception <= 0;
                         state <= 2'b11;
                         r_done <= 1;
                     end
-                    if (exp_64 == 11'b11111111111 && mantissa_64 == 52'b0) begin
+                    else if (exp_64 == 11'b11111111111 && mantissa_64 == 52'b0) begin
                     // inf
                         // returns inf
                         sign_32 <= sign_64;
                         exp_32 <= 8'b11111111;
                         mantissa_32 <= 23'b0;
 
+                        r_nan_exception <= 0;
+                        r_overflow_exception <= 0;
+                        r_underflow_exception <= 0;
+
                         state <= 2'b11;
                         r_done <= 1;
                     end
-                    if (exp_64 > 8'b11111110 + ((exp_64 >= 11'b10000000000) ? 11'b10000000000 : 11'b0)) begin
+                    else if (exp_64 >= 11'b10000000000 && exp_64 > 8'b11111110 + 11'b10000000000) begin
                     // overflow
                         // returns inf
                         sign_32 <= sign_64;
@@ -106,7 +114,15 @@ module double_to_float(
 
                         state <= 2'b11;
                         r_done <= 1;
-                    end        
+                    end   
+                    else if (exp_64 < 11'b01110000000) begin
+                    // underflow i guess?
+                        r_overflow_exception <= 0;
+                        r_nan_exception <= 0;
+                        r_underflow_exception <= 1;
+
+                        state <= 2'b10;
+                    end     
                     else begin
                         r_underflow_exception <= 0;
                         r_overflow_exception <= 0;

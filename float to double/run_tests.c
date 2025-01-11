@@ -8,40 +8,34 @@
 
 int create_test_file(FILE **tb)
 {
-    double in;
-    float out;
-    uint32_t *p1;
-    uint64_t *p2;
+    float in;
+    double out;
+    uint64_t *p1;
+    uint32_t *p2;
     int op = 0, op_max = 0;
 
     fprintf(*tb, "\
-`include \"double_to_float.v\"\n \
+`include \"float_to_double.v\"\n \
 `timescale 1ns/100ps\n \
 \
 module tb;\n \
 \
     reg clk;\n  \
-    wire [31:0] float;\n \
-    reg  [31:0] expected;\n \
-    reg [63:0] double;\n \
+    reg [31:0] float;\n \
+    reg  [63:0] expected;\n \
+    wire [63:0] double;\n \
     reg reset = 1'b1;\n \
-    reg [1:0] round = 2'b10;\n \
     wire done;\n \
 \
     reg state;\n \
 \
     wire nan_exception;\n \
-    wire underflow_exception;\n \
-    wire overflow_exception;\n \
 \
     integer op = 0;\n \
 \
-    double_to_float dtf (\n \
+    float_to_double ftd (\n \
                     .clk(clk),\n \
                     .reset(reset),\n \
-                    .rounding(round),\n \
-                    .overflow_exception(overflow_exception),\n \
-                    .underflow_exception(underflow_exception),\n \
                     .nan_exception(nan_exception),\n \
                     .double(double),\n \
                     .float(float),\n \
@@ -92,12 +86,13 @@ module tb;\n \
     while (op < INT_MAX && op < op_max - 4)
     {
         printf("Type a floating point number (must not be NaN or +- inf):\n");
-        scanf(" %lf", &in);
-        p2 = (uint64_t *) &in;
-        out = (float) in;
-        p1 = (uint32_t *) &out;
-        fprintf(*tb, "\t\t\t\t\t\t double = 64'b" str_64bit_binary ";\n", int_seq_64bit(*p2));
-        fprintf(*tb, "\t\t\t\t\t\t expected = 32'b" str_32bit_binary ";\n", int_seq_32bit(*p1));
+        scanf(" %f", &in);
+        p2 = (uint32_t *) (float *) &in;
+        printf(str_32bit_binary "\n\n", int_seq_32bit(*p2));
+        out = (double) in;
+        p1 = (uint64_t *) &out;
+        fprintf(*tb, "\t\t\t\t\t\t float = 32'b" str_32bit_binary ";\n", int_seq_32bit(*p2));
+        fprintf(*tb, "\t\t\t\t\t\t expected = 64'b" str_64bit_binary ";\n", int_seq_64bit(*p1));
         
 
         fprintf(*tb, "\t\t\t\t\tend\n \
@@ -106,36 +101,36 @@ module tb;\n \
         op++;
     }
 
-    in = (double) NAN;
-    out = ((float) in);
-    p1 = (uint32_t *) &out;
-    fprintf(*tb, "\t\t\t\t\t\t double = 64'b" str_64bit_binary ";\n", int_seq_64bit(*p2));
-    fprintf(*tb, "\t\t\t\t\t\t expected = 32'b" str_32bit_binary ";\n", int_seq_32bit(*p1));
+    in = NAN;
+    out = ((double) in);
+    p1 = (uint64_t *) &out;
+    fprintf(*tb, "\t\t\t\t\t\t float = 32'b" str_32bit_binary ";\n", int_seq_32bit(*p2));
+    fprintf(*tb, "\t\t\t\t\t\t expected = 64'b" str_64bit_binary ";\n", int_seq_64bit(*p1));
     fprintf(*tb, "\t\t\t\t\tend\n \
                          \t\t\t\t\telse if (op == %d) begin\n", op + 1);
     op++;
-    *p2 = 0b0111111111110100000000000000000000000000000000000000000000000000;
-    out = ((float) in);
-    *p1 = 0b01111111110000000000000000000000; // C's NaN is slightly different from my implementation. So I'll just put the value here
-    fprintf(*tb, "\t\t\t\t\t\t double = 64'b" str_64bit_binary ";\n", int_seq_64bit(*p2));
-    fprintf(*tb, "\t\t\t\t\t\t expected = 32'b" str_32bit_binary ";\n", int_seq_32bit(*p1));
+    *p2 = 0b01111111101000000000000000000000;
+    out = ((double) in);
+    *p1 = 0b0111111111110100000000000000000000000000000000000000000000000000; // C's NaN is slightly different from my implementation. So I'll just put the value here
+    fprintf(*tb, "\t\t\t\t\t\t float = 32'b" str_32bit_binary ";\n", int_seq_32bit(*p2));
+    fprintf(*tb, "\t\t\t\t\t\t expected = 64'b" str_64bit_binary ";\n", int_seq_64bit(*p1));
     fprintf(*tb, "\t\t\t\t\tend\n \
  \t\t\t\t\telse if (op == %d) begin\n", op + 1);
     op++;
-    in = (double) INFINITY;
-    out = ((float) in);
-    p1 = (uint32_t *) &out;
-    fprintf(*tb, "\t\t\t\t\t\t double = 64'b" str_64bit_binary ";\n", int_seq_64bit(*p2));
-    fprintf(*tb, "\t\t\t\t\t\t expected = 32'b" str_32bit_binary ";\n", int_seq_32bit(*p1));
+    in = INFINITY;
+    out = ((double) in);
+    p1 = (uint64_t *) &out;
+    fprintf(*tb, "\t\t\t\t\t\t float = 32'b" str_32bit_binary ";\n", int_seq_32bit(*p2));
+    fprintf(*tb, "\t\t\t\t\t\t expected = 64'b" str_64bit_binary ";\n", int_seq_64bit(*p1));
     fprintf(*tb, "\t\t\t\t\tend\n \
-                         \t\t\t\t\telse if (op == %d) begin\n", op + 1);
+ \t\t\t\t\telse if (op == %d) begin\n", op + 1);
     op++;
-    in = (double) -INFINITY;
-    out = ((float) in);
-    p1 = (uint32_t *) &out;
-    fprintf(*tb, "\t\t\t\t\t\t double = 64'b" str_64bit_binary ";\n", int_seq_64bit(*p2));
-    fprintf(*tb, "\t\t\t\t\t\t expected = 32'b" str_32bit_binary ";\n", int_seq_32bit(*p1));
-    fprintf(*tb, "\t\t\t\t\tend\n");
+    in = -INFINITY;
+    out = ((double) in);
+    p1 = (uint64_t *) &out;
+    fprintf(*tb, "\t\t\t\t\t\t float = 32'b" str_32bit_binary ";\n", int_seq_32bit(*p2));
+    fprintf(*tb, "\t\t\t\t\t\t expected = 64'b" str_64bit_binary ";\n", int_seq_64bit(*p1));
+    fprintf(*tb, "\t\t\t\t\tend\n", op + 1);
 
     fprintf(*tb, "\t\t\t\t\tif (op != %d) begin\n \
                         op <= op + 1;\n \
