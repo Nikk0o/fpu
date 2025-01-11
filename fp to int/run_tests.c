@@ -25,7 +25,7 @@ module tb;\n \
     reg reset = 1'b1;\n \
     wire done;\n \
     wire [31:0] int;\n\
-    reg [1:0] conv;\n\
+    reg [1:0] conv = 2'b10;\n\
     wire invalid_flag;\n\
 \
     reg state;\n \

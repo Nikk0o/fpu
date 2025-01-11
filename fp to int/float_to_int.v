@@ -13,7 +13,7 @@ module floating_point_to_int(
 	parameter mantissa_size = 23;
 	parameter exponent_size =  8;
 	parameter precision     = 32;
-	parameter exp_bias      = {exponent_size{1'b1}} - {exponent_size - 1{1'b1}};
+	parameter unsigned exp_bias      = {exponent_size - 1{1'b1}};
 
 	input                   clk;
 	input					reset;
@@ -32,7 +32,7 @@ module floating_point_to_int(
 
 	reg [1:0] state;
 
-	reg [23:0] frac;
+	reg [22:0] frac;
 	reg r_done;
 
 	initial begin
@@ -56,74 +56,86 @@ module floating_point_to_int(
 				2'b0: begin: get_float
 					sign     <= float[precision - 1];
 					mantissa[mantissa_size - 1:0] <= float[mantissa_size - 1:0];
-					mantissa[mantissa_size] <= 1'b1;
+					if (float[precision - 2:precision - 1 - exponent_size] != {exponent_size{1'b0}}) 
+						mantissa[mantissa_size] <= 1'b1;
+					else 
+						mantissa[mantissa_size] <= 1'b0;
 
-					if (float[precision - 2:precision - exponent_size - 1] < exp_bias)
-						exp <= - float[precision - 2:precision - exponent_size - 1];
+					if (float[precision - 2:precision - 1 - exponent_size] < exp_bias)
+						exp <= - $signed(float[precision - 2:precision - 1 - exponent_size]);
 					else
-						exp <= float[precision - 2:precision - exponent_size - 1] - exp_bias;
+						exp <= float[precision - 2:precision - 1 - exponent_size] - exp_bias;
 
 					r_int <= {int_size{1'b0}};
 					state <= 2'b1;
 				end
 				2'b1: begin: special_cases
-						if (float[precision - 2:precision - exponent_size - 1] == {exponent_size{1'b1}} ||
-							exp >= int_size) begin
-						// nan or infinity, or value is bigger than the max int
-							r_int <= {int_size{1'b1}};
+						if (float[precision - 2:precision - 1 - exponent_size] == {exponent_size{1'b1}}) begin
+
+							r_int[int_size - 1] <= 1'b1;
+
+							r_invalid_flag <= 1;
+							r_done <= 1;
 							state <= 2'b11;
-							if (float[precision - 2:precision - exponent_size - 1] == {exponent_size{1'b1}} && mantissa !=
-							    {mantissa_size{1'b1}} - {mantissa_size - 1{1'b1}} || exp >= int_size) 
-									r_invalid_flag <= 1;
-						end
+						end 
 						else begin
+							r_invalid_flag <= 0; 
 							state <= 2'b10;
-							r_invalid_flag <= 0;
 						end
 				end
 				2'b10: begin: conversion
-					// first round number to 0
-					integer index;
-					if (exp < 0)
+					integer shift;
+					// start by rounding to 0
+					if (exp < 0) begin
 						r_int <= {int_size{1'b0}};
-					else if (exp == 0)
-						if (sign)
-							r_int <= {int_size{1'b1}};
+					end
+					else if (exp == 0) begin
+						if (mantissa != {mantissa_size + 1{1'b0}})
+							if (sign)
+								r_int <= {int_size{1'b1}};
+							else
+								r_int <= 1'b1;
 						else
-							r_int <= 1'b1;
+							r_int <= {int_size{1'b0}};
+					end
 					else begin
-						for (index = 0; index <= exp && index <= mantissa_size; index = index + 1) begin
-							r_int[exp + 1 - index] = mantissa[mantissa_size - index];
+						for (shift = 0; shift <= exp && shift <= mantissa_size; shift = shift + 1) begin 
+							r_int[exp - shift] = mantissa[mantissa_size - shift];
 						end
 
-						if (sign)
-							r_int = 1'b1 + ~ r_int;
+						if (sign) 
+							r_int = - r_int;
 					end
+
+					if (exp >= 0) 
+						frac <= mantissa << exp;
+					else
+						frac <= mantissa >> - exp;
 
 					state <= 2'b11;
 				end
 				2'b11: begin: rounding
-					frac = mantissa << exp;
-					if (exp < mantissa_size && ! done) begin
-						if (frac != {exponent_size{1'b0}}) begin
-							case (conv)
-								2'b0: begin: round_to_0
-								end
-								2'b1: begin: round_to_posinf
-									if (!sign)
-										r_int = r_int + 1;
-								end
-								2'b10: begin: round_to_neginf
-									if (sign)
-										r_int = r_int - 1;
-								end
-								2'b11: begin: rount_to_closest
-									if (frac[mantissa_size - 1] && frac[mantissa_size - 2:0] != {mantissa_size - 1{1'b0}})
-										r_int = r_int + (sign) ? -1 : 1;
-								end
-							endcase
-						end
+					if (!done && frac[22] != 1'b0 && frac[21:0] != 22'b0) begin
+						case (conv)
+							2'b0: begin: round_to_0
+							end
+							2'b1: begin: round_to_neginf
+								if (sign)
+									r_int <= r_int - 1;
+							end
+							2'b10: begin: rount_to_posinf
+								if (!sign)
+									r_int <= r_int + 1;
+							end
+							2'b11: begin: round_to_closest
+								if (sign)
+									r_int <= r_int - 1;
+								else
+									r_int <= r_int + 1;
+							end
+						endcase
 					end
+					
 					r_done <= 1;
 				end
 			endcase
