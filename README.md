@@ -1,5 +1,5 @@
 # Floating Point Unit
-Synthesizable IEEE 754 floating point unit made in verilog.
+Synthesizable IEEE 754 floating point unit.
 Avalible operations:
 * conversions between single and double precision
 * conversions between integer and floating point (wip)

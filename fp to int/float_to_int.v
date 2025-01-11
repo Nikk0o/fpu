@@ -6,6 +6,7 @@ module floating_point_to_int(
 				    float,
 					invalid_op_flag,
 					conv,
+					done,
 					int);
 
 	parameter int_size      = 64;
@@ -20,6 +21,7 @@ module floating_point_to_int(
 	input [1:0]				conv;
 	output      		    invalid_op_flag;
 	output [int_size - 1:0] int;
+	output 					done;
 
 	reg        sign;
 	reg signed [exponent_size - 1:0]  exp;
@@ -31,12 +33,12 @@ module floating_point_to_int(
 	reg [1:0] state;
 
 	reg [23:0] frac;
-	reg done;
+	reg r_done;
 
 	initial begin
 		state <= 2'b0;
 		r_invalid_flag <=0;
-		done <= 0;
+		r_done <= 0;
 		r_int <= {int_size{1'b0}};
 	end
 
@@ -47,7 +49,7 @@ module floating_point_to_int(
 			mantissa <= {mantissa_size + 1{1'b0}};
 			sign <= 0;
 			state <= 2'b0;
-			done <= 0;
+			r_done <= 0;
 		end
 		else
 			case (state)
@@ -122,12 +124,13 @@ module floating_point_to_int(
 							endcase
 						end
 					end
-					done <= 1;
+					r_done <= 1;
 				end
 			endcase
 	end
 
 	assign invalid_op_flag = r_invalid_flag;
 	assign int = r_int;
+	assign done = r_done;
 
 endmodule
