@@ -12,5 +12,5 @@ Avalible operations:
 ## Testing
 
 Requirements:
-    * Icarus Verilog
-    * gtkwave
+* Icarus Verilog
+* gtkwave
