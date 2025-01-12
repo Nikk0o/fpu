@@ -9,6 +9,11 @@ module double_to_float(
                        done,
                        float);
 
+    parameter exp_all1_64 = 11'b11111111111;
+    parameter exp_all1_32 = 8'b11111111;
+    parameter exp_bias_64 = 11'b01111111111;
+    parameter exp_bias_32 = 8'b01111111;
+
     input clk, reset;
     input [1:0] rounding;
     input [63:0] double;
@@ -62,10 +67,10 @@ module double_to_float(
                     state <= 2'b1;
                 end
                 2'b1: begin: check_value
-                    if (exp_64 == 11'b11111111111 && mantissa_64[51:50] == 2'b01) begin         
+                    if (exp_64 == exp_all1_64 && mantissa_64[51:50] == 2'b01) begin         
                     // sNaN
                         sign_32 <= sign_64;
-                        exp_32 <= 8'b11111111;
+                        exp_32 <= exp_all1_32;
                         mantissa_32[22:21] <= 2'b10;
                         mantissa_32[20:0] <= mantissa_64[49:29];
 
@@ -75,10 +80,10 @@ module double_to_float(
                         state <= 2'b11;
                         r_done <= 1;
                     end
-                    else if (exp_64 == 11'b11111111111 && mantissa_64[51] == 1'b1) begin
+                    else if (exp_64 == exp_all1_64 && mantissa_64[51] == 1'b1) begin
                     // qNaN
                         sign_32 <= sign_64;
-                        exp_32 <= 8'b11111111;
+                        exp_32 <= exp_all1_32;
                         mantissa_32 <= mantissa_64[51:29];
 
                         r_nan_exception <= 0;
@@ -87,11 +92,11 @@ module double_to_float(
                         state <= 2'b11;
                         r_done <= 1;
                     end
-                    else if (exp_64 == 11'b11111111111 && mantissa_64 == 52'b0) begin
+                    else if (exp_64 == exp_all1_64 && mantissa_64 == 52'b0) begin
                     // inf
                         // returns inf
                         sign_32 <= sign_64;
-                        exp_32 <= 8'b11111111;
+                        exp_32 <= exp_all1_32;
                         mantissa_32 <= 23'b0;
 
                         r_nan_exception <= 0;
@@ -101,11 +106,11 @@ module double_to_float(
                         state <= 2'b11;
                         r_done <= 1;
                     end
-                    else if (exp_64 >= 11'b10000000000 && exp_64 > 8'b11111110 + 11'b10000000000) begin
+                    else if (exp_64 > 8'b11111110 + exp_bias_64) begin
                     // overflow
                         // returns inf
                         sign_32 <= sign_64;
-                        exp_32 <= 8'b11111111;
+                        exp_32 <= exp_all1_32;
                         mantissa_32 <= 23'b0;
                         
                         r_overflow_exception <= 1;
@@ -165,20 +170,20 @@ module double_to_float(
                                             if (exp_32_[11] == 1'b1) begin // overflow. infinity. Check how to handle this properly in the IEEE 754
                                                 sign_32 <= sign_64;
                                                 mantissa_32 <= 23'b0;
-                                                exp_32 <= 8'b11111111;
+                                                exp_32 <= exp_all1_32;
 
                                                 r_overflow_exception <= 1;
                                             end
                                             else begin
                                                 sign_32 <= sign_64;
-                                                exp_32 <= exp_32_[7:0] + (exp_64[10] == 1'b1) ? 8'b10000000 : 1'b0;
+                                                exp_32 <= exp_32_[7:0] + (exp_64[10] == 1'b1) ? exp_bias_32 : 1'b0;
                                                 mantissa_32 <= mantissa_32_[23:1];
                                             end
                                         end
                                         else begin
                                             // mantissa is still 23 bits
                                             sign_32 <= sign_64;
-                                            exp_32 <= exp_64[7:0] + (exp_64[10] == 1'b1) ? 8'b10000000 : 1'b0;
+                                            exp_32 <= exp_64[7:0] + (exp_64[10] == 1'b1) ? exp_bias_32 : 1'b0;
                                             mantissa_32 <= mantissa_32_[22:0];
                                         end
                                     end
@@ -196,19 +201,19 @@ module double_to_float(
                                             if (exp_32_[11] == 1'b1) begin
                                                 sign_32 <= sign_64;
                                                 mantissa_32 <= 23'b0;
-                                                exp_32 <= 8'b11111111;
+                                                exp_32 <= exp_all1_32;
 
                                                 r_overflow_exception <= 1;
                                             end
                                             else begin
                                                 sign_32 <= sign_64;
-                                                exp_32 <= exp_32_[7:0] + (exp_64[10] == 1'b1) ? 8'b10000000 : 1'b0;
+                                                exp_32 <= exp_32_[7:0] + (exp_64[10] == 1'b1) ? exp_bias_32 : 1'b0;
                                                 mantissa_32 <= mantissa_32_[23:1];
                                             end
                                         end
                                         else begin
                                             sign_32 <= sign_64;
-                                            exp_32 <= exp_64[7:0] + (exp_64[10] == 1'b1) ? 8'b10000000 : 1'b0;
+                                            exp_32 <= exp_64[7:0] + (exp_64[10] == 1'b1) ? exp_bias_32 : 1'b0;
                                             mantissa_32 <= mantissa_32_[22:0];
                                         end
                                     end
@@ -226,19 +231,19 @@ module double_to_float(
                                             if (exp_32_[11] == 1'b1) begin
                                                 sign_32 <= sign_64;
                                                 mantissa_32 <= 23'b0;
-                                                exp_32 <= 8'b11111111;
+                                                exp_32 <= exp_all1_32;
 
                                                 r_overflow_exception <= 1;
                                             end
                                             else begin
                                                 sign_32 <= sign_64;
-                                                exp_32 <= exp_32_[7:0] + (exp_64[10] == 1'b1) ? 8'b10000000 : 1'b0;
+                                                exp_32 <= exp_32_[7:0] + (exp_64[10] == 1'b1) ? exp_bias_32 1'b0;
                                                 mantissa_32 <= mantissa_32_[23:1];
                                             end
                                         end
                                         else begin
                                             sign_32 <= sign_64;
-                                            exp_32 <= exp_64[7:0] + (exp_64[10] == 1'b1) ? 8'b10000000 : 1'b0;
+                                            exp_32 <= exp_64[7:0] + (exp_64[10] == 1'b1) ? exp_bias_32 : 1'b0;
                                             mantissa_32 <= mantissa_32_[22:0];
                                         end
                                     end
@@ -252,19 +257,19 @@ module double_to_float(
                                             if (exp_32_[11] == 1'b1) begin
                                                 sign_32 <= sign_64;
                                                 mantissa_32 <= 23'b0;
-                                                exp_32 <= 8'b11111111;
+                                                exp_32 <= exp_all1_32;
 
                                                 r_overflow_exception <= 1;
                                             end
                                             else begin
                                                 sign_32 <= sign_64;
-                                                exp_32 <= exp_32_[7:0] + (exp_64[10] == 1'b1) ? 8'b10000000 : 1'b0;
+                                                exp_32 <= exp_32_[7:0] + (exp_64[10] == 1'b1) ? exp_bias_32 : 1'b0;
                                                 mantissa_32 <= mantissa_32_[23:1];
                                             end
                                         end
                                         else begin
                                             sign_32 <= sign_64;
-                                            exp_32 <= exp_64[7:0] + (exp_64[10] == 1'b1) ? 8'b10000000 : 1'b0;
+                                            exp_32 <= exp_64[7:0] + (exp_64[10] == 1'b1) ? exp_bias_32 : 1'b0;
                                             mantissa_32 <= mantissa_32_[22:0];
                                         end
                                     end

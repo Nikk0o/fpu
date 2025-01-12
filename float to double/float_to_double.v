@@ -6,6 +6,9 @@ module float_to_double(
                        done,
                        nan_exception);
 
+    parameter exp_bias_32 = 8'b01111111;
+    parameter exp_bias_64 = 11'b01111111111;
+
     reg sign_32;
     reg signed [7:0] exp_32;
     reg [22:0] mantissa_32;
@@ -87,8 +90,8 @@ module float_to_double(
                 end
                 2'b10: begin: conversion
                     sign_64 <= sign_32;
-                    if (exp_32 >= 8'b10000000)
-                        exp_64 <= exp_32 - 8'b10000000 + 11'b10000000000;
+                    if (exp_32 >= exp_bias_32)
+                        exp_64 <= exp_32 - exp_bias_32 + exp_bias_64;
                     else begin
                         exp_64 <= exp_32 + 11'b01110000000;
                     end
