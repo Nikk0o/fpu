@@ -4,9 +4,9 @@ Avalible operations:
 * conversions between single and double precision
 * conversions between integer and floating point
 * equals and greather than
-* adder / subtractor (soon)
-* multiplier (wip)
-* divider (soon)
+* adder / subtractor
+* multiplier
+* divider (wip)
 * square root (soon ?)
 * log (soon ?)
 

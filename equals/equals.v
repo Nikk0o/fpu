@@ -14,6 +14,7 @@ module equals(
 
     input clk;
     input reset;
+    input nan_exception;
     input [precision - 1:0] fp_a;
     input [precision - 1:0] fp_b;
     output res;

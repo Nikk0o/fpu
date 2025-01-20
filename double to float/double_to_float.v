@@ -237,7 +237,7 @@ module double_to_float(
                                             end
                                             else begin
                                                 sign_32 <= sign_64;
-                                                exp_32 <= exp_32_[7:0] + (exp_64[10] == 1'b1) ? exp_bias_32 1'b0;
+                                                exp_32 <= exp_32_[7:0] + ((exp_64[10] == 1'b1) ? exp_bias_32 : 1'b0);
                                                 mantissa_32 <= mantissa_32_[23:1];
                                             end
                                         end

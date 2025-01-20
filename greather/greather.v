@@ -18,11 +18,15 @@ module greather( // >=
     input [precision - 1:0] fp_b;
     output res;
     output done;
+    output nan_exception;
 
     reg r_res;
     reg r_done;
     reg excep;
 
+    reg sign_a;
+    reg sign_b;
+    
     reg [exp_size - 1:0] exp_a;
     reg [exp_size - 1:0] exp_b;
 
