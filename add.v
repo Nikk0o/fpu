@@ -1,6 +1,6 @@
 module adder(
              clk,
-             reset,
+             enable,
              fp_a,
              fp_b,
              round,
@@ -17,7 +17,7 @@ module adder(
     parameter exp_bias = {exp_size - 1{1'b1}};
 
     input clk;
-    input reset;
+    input enable;
     input add_sub;
     input [precision - 1:0] fp_a;
     input [precision - 1:0] fp_b;
@@ -51,18 +51,14 @@ module adder(
     initial begin
         r_done = 0;
         state = 2'b0;
+        sign_add = 0;
     end
 
-    integer index;
-    integer shift;
+    integer index = 0;
+    integer shift = 0;
 
-    always @(posedge clk or negedge reset) begin
-        if (!reset) begin
-            state <= 2'b00;
-            r_done <= 0;
-            r_inv_op <= 0;
-        end
-        else begin
+    always @(posedge clk) begin
+        if (enable) begin
             case (state)
                 2'b00: begin: load_values
                     sign_a <= fp_a[precision - 1];
@@ -141,7 +137,7 @@ module adder(
                     if (!r_done) begin
                         if (exp_a > exp_b) begin
                             // shift b to the size of a
-                            for (index = 0; index < precision && index <= exp_a - exp_b; index = index + 1)
+                            for (index = 0; index < mantissa_size && index <= exp_a - exp_b; index = index + 1)
                                 frac[precision - 1 - index] <= mantissa_b[index];
 
                             mantissa_b = mantissa_b >> exp_a - exp_b;
@@ -149,7 +145,7 @@ module adder(
                         end
                         else if (exp_a < exp_b) begin
                             // shift a to the size of b
-                            for (index = 0; index < precision && index <= exp_a - exp_b; index = index + 1)
+                            for (index = 0; index < mantissa_size && index <= exp_a - exp_b; index = index + 1)
                                 frac[precision - 1 - index] <= mantissa_b[index];
 
                             mantissa_a = mantissa_a >> exp_b - exp_a;
@@ -162,6 +158,7 @@ module adder(
                         
                         // add
                         if (sign_a == sign_b) begin
+                            sign_add <= sign_a;
                             mantissa_add = mantissa_a + mantissa_b;
                             if (mantissa_add[mantissa_size + 1:mantissa_size] > 2'b01) begin
                                 exp_add <= exp_add + 1;
@@ -169,11 +166,6 @@ module adder(
                             end
                         end
                         else begin
-
-                            if (mantissa_a >= mantissa_b)
-                                mantissa_add = mantissa_a - mantissa_b;
-                            else
-                                mantissa_add = mantissa_b - mantissa_a;
 
                             if (sign_a && mantissa_a > mantissa_b) begin // abs(a) > abs(b) && a < 0 && b > 0 => result < 0
                                 mantissa_add = mantissa_a - mantissa_b;
@@ -205,11 +197,12 @@ module adder(
                             if (shift < mantissa_size) begin // normalize the number
                                 // this is probably wrong
                                 mantissa_add <= mantissa_add << mantissa_size - shift;
-                                exp_add <= exp_add + (mantissa_size - shift);
+                                exp_add <= exp_add - (mantissa_size - shift);
+                                //$display("aa %d",(mantissa_size));
+                                //$display("bb %d",(shift));
                             end
                         end
                     end
-                    
                     state <= 2'b11;
                 end
                 2'b11: begin: rounding
@@ -241,6 +234,11 @@ module adder(
                     end
                 end
             endcase
+        end
+        else begin
+            state <= 2'b00;
+            r_done <= 0;
+            r_inv_op <= 0;
         end
     end
 

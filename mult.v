@@ -1,6 +1,6 @@
 module multiplier(
                   clk,
-                  reset,
+                  enable,
                   fp_a,
                   fp_b,
                   inv_op,
@@ -16,7 +16,7 @@ module multiplier(
     parameter exp_bias = {exp_size - 1{1'b1}};
 
     input clk;
-    input reset;
+    input enable;
     input [1:0] rounding;
     input [precision - 1:0] fp_a;
     input [precision - 1:0] fp_b;
@@ -51,12 +51,8 @@ module multiplier(
     integer index = 0;
     integer shift = 0;
 
-    always @(posedge clk or negedge reset) begin
-        if (!reset) begin
-            state <= 2'b0;
-            r_done <= 0;
-        end
-        else begin
+    always @(posedge clk) begin
+        if (enable) begin
             case (state)
                 2'b0: begin: load_values
                     sign_a <= fp_a[precision - 1];
@@ -144,12 +140,12 @@ module multiplier(
                     if (mantissa_mult[2 * (mantissa_size + 1) - 1] == 1'b1)
                         exp_r <= exp_r + 1'b1;
 
-                    for (index = 0; index <= 2 * (mantissa_size + 1); index = index + 1) begin
+                    for (index = 0; index < 2 * (mantissa_size + 1); index = index + 1) begin
                         if (mantissa_mult[index] == 1'b1)
                             shift = index;
                     end
                     if (shift >= mantissa_size)
-                        for (i = mantissa_size; i <= shift; i = i + 1)
+                        for (i = mantissa_size; i <= shift && i < 2 * mantissa_size; i = i + 1)
                             frac[i - mantissa_size] <= mantissa_mult[i];
                     else
                         frac <= {mantissa_size{1'b0}};
@@ -202,6 +198,10 @@ module multiplier(
                     end
                 end
             endcase
+        end
+        else begin
+            r_done <= 0;
+            r_inv_op <= 0;
         end
     end
 

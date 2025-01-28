@@ -1,6 +1,6 @@
 module float_to_double(
                        clk,
-                       reset,
+                       enable,
                        double,
                        float,
                        done,
@@ -22,7 +22,7 @@ module float_to_double(
     reg [1:0] state;
     reg r_done;
     input clk;
-    input reset;
+    input enable;
     input [31:0] float;
     output [63:0] double;
     output done;
@@ -38,14 +38,9 @@ module float_to_double(
     end
 
 
-    always @(posedge clk or negedge reset)
+    always @(posedge clk)
     begin
-        if (!reset) begin
-            state <= 2'b0;
-            r_nan_exception <= 0;
-            r_done <= 0;
-        end
-        else begin
+        if (enable) begin
             case (state)
                 2'b0: begin: load_values
                     sign_32 <= float[31];
@@ -102,7 +97,12 @@ module float_to_double(
                     r_done <= 1;
                 end
             endcase
-        end    
+        end   
+        else begin
+            state <= 2'b0;
+            r_nan_exception <= 0;
+            r_done <= 0;
+        end 
     end
 
     assign double[63] = sign_64;

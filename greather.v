@@ -1,6 +1,6 @@
 module greather( // >=
                 clk,
-                reset,
+                enable,
                 fp_a,
                 fp_b,
                 nan_exception,
@@ -13,7 +13,7 @@ module greather( // >=
     parameter mantissa_size = 23;
 
     input clk;
-    input reset;
+    input enable;
     input [precision - 1:0] fp_a;
     input [precision - 1:0] fp_b;
     output res;
@@ -33,13 +33,8 @@ module greather( // >=
     reg [mantissa_size - 1:0] mantissa_a;
     reg [mantissa_size - 1:0] mantissa_b;
 
-    always @(posedge clk or negedge reset) begin
-        if (!reset) begin
-            r_done <= 0;
-            r_res <= 0;
-            excep <= 0;
-        end
-        else if (!done) begin
+    always @(posedge clk) begin
+        if (enable && !done) begin
             sign_a <= fp_a[precision - 1];
             sign_b = fp_b[precision - 1];
 
@@ -73,13 +68,18 @@ module greather( // >=
 
                 r_done <= 1;
             end
-        end
 
-        if (exp_a == {exp_size{1'b1}} && mantissa_a[mantissa_size - 1:mantissa_size -2] == 2'b01 || 
-               exp_b == {exp_size{1'b1}} && mantissa_b[mantissa_size - 1:mantissa_size -2] == 2'b01) // ?
-            excep <= 1;
-        else 
+			if (exp_a == {exp_size{1'b1}} && mantissa_a[mantissa_size - 1:mantissa_size -2] == 2'b01 || 
+				   exp_b == {exp_size{1'b1}} && mantissa_b[mantissa_size - 1:mantissa_size -2] == 2'b01) // ?
+				excep <= 1;
+			else 
+				excep <= 0;
+		end
+        else if (!enable) begin
+            r_done <= 0;
+            r_res <= 0;
             excep <= 0;
+        end
     end
 
     assign res = r_res;

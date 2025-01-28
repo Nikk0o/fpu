@@ -2,7 +2,7 @@
 
 module int_to_fp(
 				 clk,
-				 reset,
+				 enable,
 				 int,
 				 done,
 				 fp);
@@ -14,7 +14,7 @@ module int_to_fp(
 	parameter exp_bias = {exponent_size - 1{1'b1}};
 
 	input clk,
-		  reset;
+		  enable;
 	input  [int_size - 1:0] int;
 	output [precision - 1:0]       fp;
 
@@ -35,16 +35,9 @@ module int_to_fp(
 		r_done <= 0;
 	end
 
-	always @(posedge clk or negedge reset) 
+	always @(posedge clk) 
 	begin
-		if (!reset) begin
-			mantissa <= {mantissa_size{1'b0}};
-			exp <= {exponent_size{1'b0}};
-			sign <= 0;
-			pos_int <= {int_size{1'b0}};
-			r_done <= 0;
-		end
-		else begin: conversion
+		if (enable) begin: conversion
 			integer size, i;
 			integer index;
 
@@ -72,6 +65,13 @@ module int_to_fp(
 
 			sign <= int[int_size - 1];
 			r_done <= 1;
+		end
+		else begin
+			mantissa <= {mantissa_size{1'b0}};
+			exp <= {exponent_size{1'b0}};
+			sign <= 0;
+			pos_int <= {int_size{1'b0}};
+			r_done <= 0;
 		end
 	end
 

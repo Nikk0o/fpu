@@ -1,6 +1,6 @@
 module double_to_float(
                        clk,
-                       reset,
+                       enable,
                        rounding,
                        overflow_exception,
                        underflow_exception,
@@ -14,7 +14,7 @@ module double_to_float(
     parameter exp_bias_64 = 11'b01111111111;
     parameter exp_bias_32 = 8'b01111111;
 
-    input clk, reset;
+    input clk, enable;
     input [1:0] rounding;
     input [63:0] double;
     output [31:0] float;
@@ -50,14 +50,9 @@ module double_to_float(
         r_nan_exception <= 0;
     end
 
-    always @(posedge clk or negedge reset)
+    always @(posedge clk)
     begin
-        if (!reset)
-        begin
-            state <= 2'b0;
-            r_done <= 0;
-        end
-        else begin
+        if (enable) begin
             case (state)
                 2'b0: begin: load_values
                     sign_64 <= double[63];
@@ -278,6 +273,10 @@ module double_to_float(
                         endcase
                 end
             endcase
+        end
+        else begin
+            r_done <= 0;
+            state <= 0;
         end
     end
 

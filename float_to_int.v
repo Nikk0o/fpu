@@ -2,7 +2,7 @@
 
 module floating_point_to_int(
 					clk,
-					reset,
+					enable,
 				    float,
 					invalid_op_flag,
 					conv,
@@ -13,10 +13,10 @@ module floating_point_to_int(
 	parameter mantissa_size = 23;
 	parameter exponent_size =  8;
 	parameter precision     = 32;
-	parameter unsigned exp_bias      = {exponent_size - 1{1'b1}};
+	parameter exp_bias      = {exponent_size - 1{1'b1}};
 
 	input                   clk;
-	input					reset;
+	input					enable;
 	input [precision - 1:0] float;
 	input [1:0]				conv;
 	output      		    invalid_op_flag;
@@ -42,16 +42,8 @@ module floating_point_to_int(
 		r_int <= {int_size{1'b0}};
 	end
 
-	always @(posedge clk or negedge reset) begin: conversion_logic
-		if (!reset) begin
-			r_int <= {int_size{1'b0}};
-			exp <= {exponent_size{1'b0}};
-			mantissa <= {mantissa_size + 1{1'b0}};
-			sign <= 0;
-			state <= 2'b0;
-			r_done <= 0;
-		end
-		else
+	always @(posedge clk) begin: conversion_logic
+		if (enable) begin
 			case (state)
 				2'b0: begin: get_float
 					sign     <= float[precision - 1];
@@ -139,6 +131,15 @@ module floating_point_to_int(
 					r_done <= 1;
 				end
 			endcase
+		end
+		else begin
+			r_int <= {int_size{1'b0}};
+			exp <= {exponent_size{1'b0}};
+			mantissa <= {mantissa_size + 1{1'b0}};
+			sign <= 0;
+			state <= 2'b0;
+			r_done <= 0;
+		end
 	end
 
 	assign invalid_op_flag = r_invalid_flag;

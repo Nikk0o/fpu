@@ -1,6 +1,6 @@
 module equals(
               clk,
-              reset,
+              enable,
               fp_a,
               fp_b,
               nan_exception,
@@ -13,8 +13,8 @@ module equals(
     parameter mantissa_size = 23;
 
     input clk;
-    input reset;
-    input nan_exception;
+    input enable;
+    output nan_exception;
     input [precision - 1:0] fp_a;
     input [precision - 1:0] fp_b;
     output res;
@@ -31,13 +31,8 @@ module equals(
     reg r_done;
     reg excep;
 
-    always @(posedge clk or negedge reset) begin
-        if (!reset) begin
-            r_done <= 0;
-            r_res <= 0;
-            excep <= 0;
-        end
-        else if (!done) begin
+    always @(posedge clk) begin
+        if (enable && !done) begin
             sign_a = fp_a[precision - 1];
             sign_b = fp_b[precision - 1];
             exp_a = fp_a[precision - 2:precision - 1 - exp_size];
@@ -62,6 +57,11 @@ module equals(
                 excep <= 0;
         
             r_done <= 1;
+        end
+        else if(!enable) begin
+            r_res <= 0;
+            r_done <= 0;
+            excep <= 0;
         end
     end
 
