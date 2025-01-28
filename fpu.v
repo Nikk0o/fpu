@@ -1,12 +1,12 @@
-`include "add/add.v"
-`include "double to float/double_to_float.v"
-`include "equals/equals.v"
-`include "float to double/float_to_double.v"
-`include "fp to int/float_to_int.v"
-`include "greather/greather.v"
-`include "int to fp/int_to_fp.v"
-`include "mult/mult.v"
-`include "div/div.v"
+`include "add.v"
+`include "double_to_float.v"
+`include "equals.v"
+`include "float_to_double.v"
+`include "float_to_int.v"
+`include "greather.v"
+`include "int_to_fp.v"
+`include "mult.v"
+`include "div.v"
 
 module fpu(
            input clk,
@@ -314,7 +314,7 @@ module fpu(
                        );
 
 
-    always @(posedge w_done) begin
+    always @(*) begin
         if (ad || sub || mlt || dv || ld) begin
             // operations that can have either single or double precision results
             if (!precision) begin
