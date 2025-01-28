@@ -1,2 +1,6 @@
 **/.vscode
 **.gprj
+**.user
+**/impl
+tb.v
+**.vvp
