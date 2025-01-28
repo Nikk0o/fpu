@@ -22,9 +22,11 @@ module fpu(
            input [2:0] reg_a_no,
            input [2:0] reg_b_no,
 		   input [2:0] sl_loc,
-		   input store_sel, //1: store b, 2: store a
+		   input store_sel, //1: store b, 2: store a // precisa disso mesmo ?
            output reg [63:0] result,
            output reg [31:0] result_int,
+		   output reg eq_flag_o,
+		   output reg gr_flag_o,
            output done
 );
 
@@ -307,60 +309,62 @@ module fpu(
                        .done(done_f_d)
                        );
 
-
 	// sinto q isso aqui ta errado
-    always @(posedge w_done) begin
+    always @(posedge clk) begin
         if (ad || sub || mlt || dv || ld) begin
-            // operations that can have either single or double precision results
+		// operations that can have single or double precision output
             if (!precision) begin
                 if (ad || sub) 
-                    result[63:32] <= res_add_f;
+                    result[63:32] = res_add_f;
                 else if (dv)
-                    result[63:32] <= res_div_f;
+                    result[63:32] = res_div_f;
                 else if (mlt)
-                    result[63:32] <= res_mlt_f;
+                    result[63:32] = res_mlt_f;
                 else
-                    result[63:32] <= res_load_f;
-
-                result[31:0] <= 32'b0;
+                    result[63:32] = res_load_f;
             end
             else begin
                 if (ad || sub) 
-                    result <= res_add_d;
+                    result = res_add_d;
                 else if (dv)
-                    result <= res_div_d;
+                    result = res_div_d;
                 else if (mlt)
-                    result <= res_mlt_d;
+                    result = res_mlt_d;
                 else
-                    result <= res_load_d;
+                    result = res_load_d;
             end
         end
         else begin
-            // operations whose result has a defined precision
             if (f_i) begin
-                result_int <= res_f_i;
+                result_int = res_f_i;
             end
             else if (i_f) begin
-                result[63:32] <= res_i_f;
-                result[31:0] <= 32'b0;
+                result[63:32] = res_i_f;
             end
             else if (d_i) begin
-                result_int <= res_d_i;
+                result_int = res_d_i;
             end
             else if (i_d) begin
-                result <= res_i_d;
+                result = res_i_d;
             end
             else if (f_d) begin
-                result <= res_f_d;
+                result = res_f_d;
             end
             else if (d_f) begin
-                result <= res_d_f;
+                result = res_d_f;
             end
             else begin
-                result <= 64'b0;
-                result_int <= 32'b0;
+                result = 64'b0;
             end
         end
+
+		if (!precision) begin
+			eq_flag_o = eq_flag_f;
+			gr_flag_o = gr_flag_f;
+		end else begin
+			eq_flag_o = eq_flag_d;
+			gr_flag_o = gr_flag_d;
+		end
     end
 
     always @(posedge clk) begin // load

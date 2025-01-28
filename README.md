@@ -1,3 +1,5 @@
+I have not tested some operations so they might be wrong
+
 # Floating Point Unit
 
 Avalible operations:
