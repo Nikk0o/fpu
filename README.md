@@ -1,4 +1,4 @@
-I have not tested some operations so they might be wrong
+I didn't test everything, so there might be some errors
 
 # Floating Point Unit
 
