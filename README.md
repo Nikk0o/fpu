@@ -1,17 +1,11 @@
 # Floating Point Unit
-Synthesizable IEEE 754 floating point unit.
+
 Avalible operations:
 * conversions between single and double precision
 * conversions between integer and floating point
-* equals and greather than
+* =
+* >=
 * adder / subtractor
-* multiplier
-* divider (wip)
-* square root (soon ?)
-* log (soon ?)
-
-## Testing
-
-Requirements:
-* Icarus Verilog
-* gtkwave
+* multiplication
+* division
+* integer division (wip)
