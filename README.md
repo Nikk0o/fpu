@@ -7,7 +7,8 @@ Avalible operations:
 * conversions between integer and floating point
 * =
 * \>=
-* adder / subtractor
+* addition
+* subtraction
 * multiplication
 * division
 * integer division (wip)
