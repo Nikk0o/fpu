@@ -250,7 +250,6 @@ module fpu(
 					.clk(clk),
 					.enable(enable),
 				    .float(input_fp_a[63:32]),
-					//invalid_op_flag,
 					.conv(rounding),
 					.done(done_f_i),
 					.int(res_f_i));
@@ -264,7 +263,6 @@ module fpu(
 					.clk(clk),
 					.enable(enable),
 				    .float(input_fp_a),
-					//invalid_op_flag,
 					.conv(rounding),
 					.done(done_d_i),
 					.int(res_d_i));
@@ -297,9 +295,6 @@ module fpu(
                        .clk(clk),
                        .enable(enable),
                        .rounding(rounding),
-                       //.overflow_exception,
-                       //.underflow_exception,
-                       //.nan_exception,
                        .double(input_fp_a),
                        .done(done_d_f),
                        .float(res_d_f));
@@ -309,8 +304,7 @@ module fpu(
                        .enable(enable),
                        .double(res_f_d),
                        .float(input_fp_a[63:32]),
-                       .done(done_f_d)//,
-                       //.nan_exception
+                       .done(done_f_d)
                        );
 
 
