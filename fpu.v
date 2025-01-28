@@ -314,7 +314,8 @@ module fpu(
                        );
 
 
-    always @(*) begin
+	// sinto q isso aqui ta errado
+    always @(posedge w_done) begin
         if (ad || sub || mlt || dv || ld) begin
             // operations that can have either single or double precision results
             if (!precision) begin
